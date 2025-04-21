@@ -1,0 +1,14 @@
+input_boolean:  
+  flicker_script_global_active:
+    name: Global Flicker Script Active
+    initial: off
+
+  glass_lamp_flicker_active:
+    name: Glass Lamp Flicker
+    initial: off
+  wall_light_flicker_active:
+    name: Wall Light Flicker
+    initial: off
+  desk_lamp_light_flicker_active:
+    name: Desk Light Flicker
+    initial: off
