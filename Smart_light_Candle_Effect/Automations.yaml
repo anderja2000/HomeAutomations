@@ -1,0 +1,88 @@
+- alias: "Stop Flicker on Manual Change"
+  trigger:
+    - platform: state
+      entity_id: light.glass_lamp
+    - platform: state
+      entity_id: light.wall_light
+    - platform: state
+      entity_id: light.desk_lamp_light
+  condition:
+    - condition: template
+      value_template: >
+        {% set light_name = trigger.entity_id.split('.')[1] %}
+        {% set ib = 'input_boolean.' + light_name + '_flicker_active' %}
+        {{ is_state(ib, 'on') }}
+    - condition: template
+      value_template: "{{ trigger.context.user_id is not none or trigger.context.parent_id is none }}"
+  action:
+    - service: input_boolean.turn_off
+      target:
+        entity_id: >
+          {% set light_name = trigger.entity_id.split('.')[1] %}
+          input_boolean.{{ light_name }}_flicker_active
+    - service: input_boolean.turn_off
+      target:
+        entity_id: input_boolean.flicker_script_global_active
+
+- alias: "Force Light Control Priority"
+  trigger:
+    - platform: state
+      entity_id: light.all_lights
+  condition:
+    - condition: template
+      value_template: "{{ is_state('input_boolean.light_override_mode', 'on') }}"
+    - condition: state
+      entity_id: input_boolean.flicker_script_global_active
+      state: "off"
+  action:
+    - service: input_boolean.turn_off
+      target:
+        entity_id: >
+          {% set light_name = trigger.entity_id.split('.')[1] %}
+          input_boolean.{{ light_name }}_flicker_active
+    - delay: 0.5
+    - service: light.turn_on
+      target:
+        entity_id: "{{ trigger.entity_id }}"
+      data: "{{ trigger.to_state.attributes }}"
+
+- alias: "Stop Flicker When Light Turned OFF"
+  trigger:
+    - platform: state
+      entity_id: light.glass_lamp
+      to: "off"
+    - platform: state
+      entity_id: light.wall_light
+    - platform: state
+      entity_id: light.desk_lamp_light
+      to: "off"
+  action:
+    - service: input_boolean.turn_off
+      target:
+        entity_id: >
+          {% set light_name = trigger.entity_id.split('.')[1] %}
+          input_boolean.{{ light_name }}_flicker_active
+    - service: input_boolean.turn_off
+      target:
+        entity_id: input_boolean.flicker_script_global_active
+
+- alias: "Detect Manual Light Control"
+  trigger:
+    - platform: state
+      entity_id: light.glass_lamp
+    - platform: state
+      entity_id: light.wall_light
+    - platform: state
+      entity_id: light.desk_lamp_light
+  condition:
+    - condition: template
+      value_template: "{{ trigger.context.user_id is not none }}"
+  action:
+    - service: input_boolean.turn_off
+      target:
+        entity_id: input_boolean.flicker_script_global_active
+    - service: input_boolean.turn_off
+      target:
+        entity_id: >
+          {% set light_name = trigger.entity_id.split('.')[1] %}
+          input_boolean.{{ light_name }}_flicker_active
